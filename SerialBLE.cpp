@@ -4,7 +4,8 @@
 static BLEService uartService("0000ffe0-0000-1000-8000-00805f9b34fb"); // BLE LED Service
 
 // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
-static BLECharacteristic uartCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fb", BLEWrite | BLENotify, 20);
+static BLECharacteristic uartTxCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fb", BLENotify, 20);
+static BLECharacteristic uartRxCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fc", BLEWrite, 20);
 
 void SerialBLEClass::loop() {
     while (1) {
@@ -16,9 +17,9 @@ void SerialBLEClass::loop() {
 
             while (central.connected()) {
 
-                if (uartCharacteristic.written()) {
-                    int length = uartCharacteristic.valueLength();
-                    const uint8_t* val = uartCharacteristic.value();
+                if (uartRxCharacteristic.written()) {
+                    int length = uartRxCharacteristic.valueLength();
+                    const uint8_t* val = uartRxCharacteristic.value();
                     for (int i = 0; i < length; i++) {
                         rx_buffer.store_char((char)val[i]);
                     }
@@ -31,7 +32,7 @@ void SerialBLEClass::loop() {
                     while (i < available) {
                         buf[i++] = tx_buffer.read_char();
                     }
-                    uartCharacteristic.writeValue(buf, available);
+                    uartTxCharacteristic.writeValue(buf, available);
                 }
             }
         } else {
@@ -54,7 +55,8 @@ void SerialBLEClass::begin(unsigned long baudrate, uint16_t config) {
     BLE.setAdvertisedService(uartService);
 
     // add the characteristic to the service
-    uartService.addCharacteristic(uartCharacteristic);
+    uartService.addCharacteristic(uartRxCharacteristic);
+    uartService.addCharacteristic(uartTxCharacteristic);
 
     // add service
     BLE.addService(uartService);
