@@ -29,7 +29,7 @@ void SerialBLEClass::loop() {
                 if (available) {
                     uint8_t buf[available];
                     int i = 0;
-                    while (i < available) {
+                    while (i < available && i < 20) {
                         buf[i++] = tx_buffer.read_char();
                     }
                     uartTxCharacteristic.writeValue(buf, available);
